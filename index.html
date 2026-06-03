@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eFAN of BD - Live Leaderboard Bot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .input-section {
+            margin-bottom: 25px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+        textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 15px;
+        }
+        th, td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f1f2f6;
+        }
+        .rank-1 { background-color: #ffeaa7 !important; font-weight: bold; }
+        .rank-2 { background-color: #dfe6e9 !important; }
+        .rank-3 { background-color: #fab1a0 !important; }
+        .total-col { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🏆 eFAN of BD - লাইভ লিডারবোর্ড জেনারেটর</h2>
+    
+    <div class="input-section">
+        <label for="rawFormat">গুগল শিট বা মেসেঞ্জার থেকে সরাসরি ডাটা কপি করে এখানে পেস্ট করুন:</label>
+        <textarea id="rawFormat" placeholder="এখানে ডাটা পেস্ট করুন..."></textarea>
+        <button onclick="generateLeaderboard()">⚡ লিডারবোর্ড তৈরি ও সেভ করো</button>
+    </div>
+
+    <div class="table-responsive">
+        <table id="leaderboardTable">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Team Name</th>
+                    <th>Base</th>
+                    <th>L2</th>
+                    <th>L1</th>
+                    <th>EPL</th>
+                    <th>Origin</th>
+                    <th>Champ</th>
+                    <th>Friend</th>
+                    <th>Total Points</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr>
+                    <td colspan="10" style="color: #7f8c8d; font-style: italic;">এখনো কোনো ডাটা ইনপুট দেওয়া হয়নি।</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+// পেজ লোড হওয়ার সাথে সাথে পুরানো ডাটা চেক করবে
+window.onload = function() {
+    const savedData = localStorage.getItem('savedLeaderboardText');
+    if (savedData) {
+        document.getElementById('rawFormat').value = savedData;
+        processData(savedData);
+    }
+};
+
+function generateLeaderboard() {
+    const rawText = document.getElementById('rawFormat').value.trim();
+    if (!rawText) {
+        alert('দয়া করে আগে বক্সে ডাটা পেস্ট করুন!');
+        return;
+    }
+    // ব্রাউজারের মেমরিতে টেক্সট সেভ করে রাখা হচ্ছে
+    localStorage.setItem('savedLeaderboardText', rawText);
+    processData(rawText);
+}
+
+function processData(rawText) {
+    const lines = rawText.split('\n');
+    const teamsData = [];
+
+    lines.forEach(line => {
+        if (!line.trim()) return;
+        const parts = line.trim().split(/\s+/);
+        
+        if(parts.length > 0) {
+            const teamName = parts[0];
+            const base = parseInt(parts[1]) || 0;
+            const l2 = parseInt(parts[2]) || 0;
+            const l1 = parseInt(parts[3]) || 0;
+            const epl = parseInt(parts[4]) || 0;
+            const origin = parseInt(parts[5]) || 0;
+            const champ = parseInt(parts[6]) || 0;
+            const friend = parseInt(parts[7]) || 0;
+            
+            const total = base + l2 + l1 + epl + origin + champ + friend;
+
+            teamsData.push({
+                name: teamName, base: base, l2: l2, l1: l1, epl: epl, origin: origin, champ: champ, friend: friend, total: total
+            });
+        }
+    });
+
+    teamsData.sort((a, b) => b.total - a.total);
+
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    teamsData.forEach((team, index) => {
+        const rank = index + 1;
+        let rowClass = '';
+        if (rank === 1) rowClass = 'rank-1';
+        else if (rank === 2) rowClass = 'rank-2';
+        else if (rank === 3) rowClass = 'rank-3';
+
+        const row = `
+            <tr class="${rowClass}">
+                <td>${rank}</td>
+                <td style="text-align: left; padding-left: 20px; font-weight: 500;">${team.name}</td>
+                <td>${team.base}</td>
+                <td>${team.l2}</td>
+                <td>${team.l1}</td>
+                <td>${team.epl}</td>
+                <td>${team.origin}</td>
+                <td>${team.champ}</td>
+                <td>${team.friend}</td>
+                <td class="total-col">${team.total}</td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+</script>
+
+</body>
+</html>
